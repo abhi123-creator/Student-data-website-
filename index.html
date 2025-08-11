@@ -1,0 +1,176 @@
+g<!DOCTYPE html>
+<html>
+<head>
+  <title>Student Data Manager</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f5f5f5;
+      padding: 20px;
+    }
+    .hidden { display: none; }
+    .container {
+      max-width: 600px;
+      margin: auto;
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    input, button {
+      width: 100%;
+      padding: 10px;
+      margin-top: 8px;
+      box-sizing: border-box;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 15px;
+    }
+    th, td {
+      border: 1px solid #ddd;
+      padding: 8px;
+      text-align: center;
+    }
+    button.action-btn {
+      width: auto;
+      padding: 5px 8px;
+      margin: 2px;
+    }
+  </style>
+</head>
+<body>
+
+<div id="loginPage" class="container">
+  <h2>Login</h2>
+  <input type="password" id="loginPassword" placeholder="Enter password">
+  <button onclick="checkLogin()">Login</button>
+</div>
+
+<div id="mainPage" class="container hidden">
+  <h2>Student Data Entry</h2>
+  <input type="text" id="name" placeholder="Name">
+  <input type="number" id="admission" placeholder="Admission No">
+  <input type="number" id="mobile" placeholder="Mobile No">
+  <input type="text" id="class" placeholder="Class">
+  <input type="password" id="userPassword" placeholder="Password">
+  <button onclick="saveData()">Save</button>
+
+  <h3>Saved Records</h3>
+  <table id="dataTable">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Admission No</th>
+        <th>Mobile No</th>
+        <th>Class</th>
+        <th>Username</th>
+        <th>Password</th>
+        <th>Special Code</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+</div>
+
+<script>
+  const SITE_PASSWORD = "12345"; // Change site password here
+  let editIndex = null;
+
+  function checkLogin() {
+    let enteredPass = document.getElementById("loginPassword").value;
+    if (enteredPass === SITE_PASSWORD) {
+      document.getElementById("loginPage").classList.add("hidden");
+      document.getElementById("mainPage").classList.remove("hidden");
+      loadData();
+    } else {
+      alert("Incorrect password!");
+    }
+  }
+
+  function saveData() {
+    let name = document.getElementById("name").value.trim();
+    let admission = parseInt(document.getElementById("admission").value);
+    let mobile = document.getElementById("mobile").value.trim();
+    let studentClass = document.getElementById("class").value.trim();
+    let password = document.getElementById("userPassword").value.trim();
+
+    if (!name || !admission || !mobile || !studentClass || !password) {
+      alert("Please fill all fields");
+      return;
+    }
+
+    let username = mobile; 
+    let specialCode = name + (admission + 5);
+
+    let students = JSON.parse(localStorage.getItem("students") || "[]");
+
+    if (editIndex !== null) {
+      students[editIndex] = { name, admission, mobile, studentClass, username, password, specialCode };
+      editIndex = null;
+    } else {
+      students.push({ name, admission, mobile, studentClass, username, password, specialCode });
+    }
+
+    localStorage.setItem("students", JSON.stringify(students));
+
+    alert("Data saved!");
+    loadData();
+    clearForm();
+  }
+
+  function loadData() {
+    let students = JSON.parse(localStorage.getItem("students") || "[]");
+    let tbody = document.querySelector("#dataTable tbody");
+    tbody.innerHTML = "";
+    students.forEach((stu, index) => {
+      let row = `<tr>
+        <td>${stu.name}</td>
+        <td>${stu.admission}</td>
+        <td>${stu.mobile}</td>
+        <td>${stu.studentClass}</td>
+        <td>${stu.username}</td>
+        <td>${stu.password}</td>
+        <td>${stu.specialCode}</td>
+        <td>
+          <button class="action-btn" onclick="editData(${index})">Edit</button>
+          <button class="action-btn" onclick="deleteData(${index})">Delete</button>
+        </td>
+      </tr>`;
+      tbody.innerHTML += row;
+    });
+  }
+
+  function editData(index) {
+    let students = JSON.parse(localStorage.getItem("students") || "[]");
+    let stu = students[index];
+    document.getElementById("name").value = stu.name;
+    document.getElementById("admission").value = stu.admission;
+    document.getElementById("mobile").value = stu.mobile;
+    document.getElementById("class").value = stu.studentClass;
+    document.getElementById("userPassword").value = stu.password;
+    editIndex = index;
+  }
+
+  function deleteData(index) {
+    if (confirm("Are you sure you want to delete this record?")) {
+      let students = JSON.parse(localStorage.getItem("students") || "[]");
+      students.splice(index, 1);
+      localStorage.setItem("students", JSON.stringify(students));
+      loadData();
+    }
+  }
+
+  function clearForm() {
+    document.getElementById("name").value = "";
+    document.getElementById("admission").value = "";
+    document.getElementById("mobile").value = "";
+    document.getElementById("class").value = "";
+    document.getElementById("userPassword").value = "";
+  }
+</script>
+
+</body>
+</html>
